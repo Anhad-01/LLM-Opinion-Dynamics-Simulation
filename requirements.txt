@@ -2,3 +2,4 @@ google-genai
 pandas
 streamlit
 plotly
+python-dotenv

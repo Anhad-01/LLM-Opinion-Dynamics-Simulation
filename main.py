@@ -1,37 +1,28 @@
 import os
 import asyncio
+import random
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 from google.genai.errors import APIError
 
-# =====================================================================
-# GLOBAL VARIABLES & CONFIGURATION
-# =====================================================================
+load_dotenv()
+
 NUM_AGENTS = 10
 NUM_ROUNDS = 5
 TOPIC = "Should a global, mandatory carbon tax be implemented?"
 
-# Initialize the Gemini Client
-# The client automatically picks up the GEMINI_API_KEY environment variable.
 try:
     client = genai.Client()
 except Exception as e:
     print(f"Warning: Could not initialize global Gemini Client. {e}")
     client = None
 
-
 async def get_gemini_response(system_instruction: str, user_prompt: str, model: str = "gemini-2.5-flash") -> str:
-    """
-    Asynchronous wrapper for the Gemini API.
-    Accepts a system instruction (persona) and a user prompt.
-    Includes basic error handling for API limits or connection issues.
-    """
     if not client:
         return "Error: Gemini client is not initialized. Please set the GEMINI_API_KEY environment variable."
         
     try:
-        # Use the asynchronous client to generate content
-        # google-genai SDK provides client.aio for async operations
         response = await client.aio.models.generate_content(
             model=model,
             contents=user_prompt,
@@ -42,40 +33,59 @@ async def get_gemini_response(system_instruction: str, user_prompt: str, model: 
         )
         return response.text
     except APIError as e:
-        # Handle specific API errors (e.g., rate limits, invalid keys)
         print(f"Gemini API Error: {e.message} (Code: {e.code})")
         return f"Error: API limit reached or invalid request. Details: {e.message}"
     except Exception as e:
-        # Fallback for general exceptions
         print(f"An unexpected error occurred during the API call: {e}")
         return f"Error: {str(e)}"
 
+BASE_PERSONAS = [
+    "A pragmatic economist who prioritizes market stability and gradual changes",
+    "A passionate environmental scientist who believes drastic action is needed immediately",
+    "A conservative politician concerned about the economic impact on the working class and businesses",
+    "A progressive activist focused on environmental justice and systemic change",
+    "An indifferent citizen who doesn't follow politics but cares about daily living costs",
+    "An industrial lobbyist who protects the interests of large manufacturing corporations",
+    "A tech entrepreneur looking for technological rather than policy-driven solutions",
+    "A local farmer who worries about the direct cost of fuel and supplies",
+    "A youth climate striker who feels their future is being stolen",
+    "A renewable energy investor hoping to capitalize on green policies",
+    "A pessimistic philosopher who thinks humanity is doomed regardless of policy",
+    "An international diplomat concerned about fairness between developed and developing nations"
+]
 
-async def test_ping():
+def generate_personas(num_agents: int) -> list[dict]:
     """
-    Simple test script to ensure we can ping Gemini successfully.
+    Dynamically generates a list of distinct personas based on NUM_AGENTS.
+    Assigns them a random, hidden "initial stance score" (1-10).
     """
-    print("Testing Gemini API wrapper...")
-    print("-----------------------------")
+    personas = []
     
-    syst_inst = "You are a helpful test assistant. Respond briefly."
-    prompt = "Say 'Hello, World!' and confirm you are ready."
-    
-    print(f"System Instruction: {syst_inst}")
-    print(f"User Prompt: {prompt}")
-    print("Awaiting response...\n")
-    
-    response = await get_gemini_response(syst_inst, prompt)
-    
-    print(f"Response:\n{response}")
-    print("-----------------------------")
+    # If we need more agents than we have base personas, sample with replacement
+    if num_agents > len(BASE_PERSONAS):
+        selected_archetypes = random.choices(BASE_PERSONAS, k=num_agents)
+    else:
+        selected_archetypes = random.sample(BASE_PERSONAS, k=num_agents)
+        
+    for i, archetype in enumerate(selected_archetypes):
+        stance_score = random.randint(1, 10)
+        personas.append({
+            "agent_id": f"Agent_{i+1}",
+            "system_prompt": f"You are {archetype}. Consistently represent these views in debates. Keep your responses conversational and concise.",
+            "initial_stance_score": stance_score
+        })
+        
+    return personas
 
+async def test_personas():
+    print("Testing Persona Generation...\n")
+    personas = generate_personas(NUM_AGENTS)
+    for p in personas:
+        print(f"[{p['agent_id']}] Stance: {p['initial_stance_score']}/10")
+        print(f"System Prompt: {p['system_prompt']}\n")
+    print(f"Successfully generated {len(personas)} personas.")
 
 if __name__ == "__main__":
-    # Ensure GEMINI_API_KEY is set in your environment
     if not os.environ.get("GEMINI_API_KEY"):
         print("WARNING: GEMINI_API_KEY environment variable not found.")
-        print("Please set it using: export GEMINI_API_KEY='your_api_key'")
-        
-    # Run the test
-    asyncio.run(test_ping())
+    asyncio.run(test_personas())
