@@ -4,12 +4,19 @@ import random
 import pandas as pd
 import streamlit as st
 import plotly.express as px
+import logging
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
 load_dotenv()
+
+logging.basicConfig(
+    filename='simulation_run.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 st.set_page_config(page_title="Opinion Dynamics Sim", layout="wide")
 
@@ -133,21 +140,26 @@ async def agent_turn(persona: dict, context: str, is_first_round: bool) -> str:
         return f"API Error: {str(e)}"
 
 async def run_simulation(ui_container):
+    logging.info(f"--- STARTED NEW SIMULATION ---")
+    logging.info(f"Agents: {NUM_AGENTS}, Rounds: {NUM_ROUNDS}, Topic: {TOPIC}")
+    
     personas = generate_personas(NUM_AGENTS)
     debate_history = ""
     evaluation_results = []
     
     for round_num in range(1, NUM_ROUNDS + 1):
+        logging.info(f"Beginning Round {round_num}")
         with ui_container.status(f"Round {round_num} in progress...", expanded=True) as status:
             is_first = (round_num == 1)
             round_context = f"\n--- Round {round_num} ---\n"
             
             for p in personas:
                 agent_id = p["agent_id"]
-                status.write(f"⏳ Awaiting response from {agent_id}...")
+                status.write(f"Awaiting response from {agent_id}...")
                 
                 response = await agent_turn(p, debate_history, is_first)
                 formatted_response = response.strip()
+                logging.info(f"Agent {agent_id} responded: {formatted_response}")
                 round_context += f"{agent_id} says: {formatted_response}\n\n"
                 
                 ui_container.markdown(f"**{agent_id}**: {formatted_response}")
@@ -157,6 +169,7 @@ async def run_simulation(ui_container):
                 status.write(f"⚖️ Judging {agent_id}...")
                 persona_name = p["system_prompt"].split(".")[0].replace("You are ", "")
                 eval_data = await judge_statement(round_num, agent_id, persona_name, formatted_response)
+                logging.info(f"Judge evaluated {agent_id}: Score {eval_data['Stance_Score']} - {eval_data['Statement_Summary']}")
                 evaluation_results.append(eval_data)
                 
                 await asyncio.sleep(4.5)
@@ -164,7 +177,16 @@ async def run_simulation(ui_container):
             status.update(label=f"Round {round_num} Complete!", state="complete", expanded=False)
             debate_history += round_context
             
-    return pd.DataFrame(evaluation_results)
+    df = pd.DataFrame(evaluation_results)
+    
+    df_output_path = "all_simulations_results.csv"
+    if os.path.exists(df_output_path):
+        df.to_csv(df_output_path, mode='a', header=False, index=False)
+    else:
+        df.to_csv(df_output_path, index=False)
+    logging.info("Simulation completed and saved to all_simulations_results.csv")
+    
+    return df
 
 st.title("Opinion Dynamics & Emergence Dashboard")
 st.markdown("Watch AI agents develop, debate, and shift their stances over a controversial topic!")
