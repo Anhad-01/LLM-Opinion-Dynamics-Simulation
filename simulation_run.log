@@ -74,3 +74,32 @@
 2026-04-07 13:01:53,829 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
 2026-04-07 13:01:53,834 - INFO - Judge evaluated Agent_3: Score 10 - A global, mandatory carbon tax is presented as the sole immediate and effective mechanism to achieve the large-scale decarbonization necessary to avert an extinction-level climate crisis.
 2026-04-07 13:01:58,373 - INFO - Simulation completed and saved to all_simulations_results.csv
+2026-04-07 13:24:36,966 - INFO - --- STARTED NEW SIMULATION ---
+2026-04-07 13:24:36,967 - INFO - Agents: 2, Rounds: 2, Topic: Should death penalty be abolished?
+2026-04-07 13:24:36,967 - INFO - Beginning Round 1
+2026-04-07 13:24:37,058 - INFO - AFC is enabled with max remote calls: 10.
+2026-04-07 13:24:39,435 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-04-07 13:24:39,439 - INFO - Agent Agent_1 responded: Yes, I firmly believe the death penalty should be abolished worldwide. It raises significant concerns about human rights and fairness, particularly regarding disparities in legal systems and access to justice between nations. This issue often disproportionately affects vulnerable populations.
+2026-04-07 13:24:43,996 - INFO - AFC is enabled with max remote calls: 10.
+2026-04-07 13:24:46,803 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-04-07 13:24:46,808 - INFO - Judge evaluated Agent_1: Score 10 - The speaker firmly believes the death penalty should be abolished worldwide due to significant concerns about human rights, fairness, disparities in legal systems, and its disproportionate impact on vulnerable populations.
+2026-04-07 13:24:51,356 - INFO - AFC is enabled with max remote calls: 10.
+2026-04-07 13:24:53,947 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 503 Service Unavailable"
+2026-04-07 13:24:53,949 - INFO - Agent Agent_2 responded: API Error: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+2026-04-07 13:24:58,498 - INFO - AFC is enabled with max remote calls: 10.
+2026-04-07 13:25:00,068 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-04-07 13:25:00,072 - INFO - Judge evaluated Agent_2: Score 5 - No statement was provided for evaluation.
+2026-04-07 13:25:04,578 - INFO - Beginning Round 2
+2026-04-07 13:25:04,665 - INFO - AFC is enabled with max remote calls: 10.
+2026-04-07 13:25:07,750 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-04-07 13:25:07,754 - INFO - Agent Agent_1 responded: I wholeheartedly agree. The stark disparities in legal systems and access to justice, particularly between developed and developing nations, make the death penalty a grave concern for global fairness. It is imperative that we consider how this disproportionately impacts vulnerable populations worldwide.
+2026-04-07 13:25:12,309 - INFO - AFC is enabled with max remote calls: 10.
+2026-04-07 13:25:15,127 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-04-07 13:25:15,130 - INFO - Judge evaluated Agent_1: Score 10 - The death penalty should be abolished due to global fairness concerns stemming from disparities in legal systems and access to justice, which disproportionately impact vulnerable populations worldwide.
+2026-04-07 13:25:19,690 - INFO - AFC is enabled with max remote calls: 10.
+2026-04-07 13:25:24,453 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-04-07 13:25:24,456 - INFO - Agent Agent_2 responded: Abolition feels like a surrender to systemic flaws. We should instead deploy advanced technology – like AI for unbiased legal review and forensic tools – to guarantee absolute accuracy and equal access to justice. This ensures fairness without policy changes.
+2026-04-07 13:25:29,013 - INFO - AFC is enabled with max remote calls: 10.
+2026-04-07 13:25:32,811 - INFO - HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent "HTTP/1.1 200 OK"
+2026-04-07 13:25:32,815 - INFO - Judge evaluated Agent_2: Score 2 - The statement argues against abolishing the death penalty, proposing that technological advancements like AI should instead be used to ensure absolute accuracy and equal access to justice, thereby addressing systemic flaws without needing policy changes.
+2026-04-07 13:25:37,328 - INFO - Simulation completed and saved to runs/run_20260407_132436/results.csv

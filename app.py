@@ -12,11 +12,7 @@ from google.genai import types
 
 load_dotenv()
 
-logging.basicConfig(
-    filename='simulation_run.log',
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+from datetime import datetime
 
 st.set_page_config(page_title="Opinion Dynamics Sim", layout="wide")
 
@@ -140,15 +136,25 @@ async def agent_turn(persona: dict, context: str, is_first_round: bool) -> str:
         return f"API Error: {str(e)}"
 
 async def run_simulation(ui_container):
-    logging.info(f"--- STARTED NEW SIMULATION ---")
-    logging.info(f"Agents: {NUM_AGENTS}, Rounds: {NUM_ROUNDS}, Topic: {TOPIC}")
+    run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_dir = os.path.join("runs", f"run_{run_id}")
+    os.makedirs(run_dir, exist_ok=True)
+    
+    logger = logging.getLogger(run_id)
+    logger.setLevel(logging.INFO)
+    fh = logging.FileHandler(os.path.join(run_dir, "simulation.log"))
+    fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    logger.addHandler(fh)
+
+    logger.info(f"--- STARTED NEW SIMULATION ---")
+    logger.info(f"Agents: {NUM_AGENTS}, Rounds: {NUM_ROUNDS}, Topic: {TOPIC}")
     
     personas = generate_personas(NUM_AGENTS)
     debate_history = ""
     evaluation_results = []
     
     for round_num in range(1, NUM_ROUNDS + 1):
-        logging.info(f"Beginning Round {round_num}")
+        logger.info(f"Beginning Round {round_num}")
         with ui_container.status(f"Round {round_num} in progress...", expanded=True) as status:
             is_first = (round_num == 1)
             round_context = f"\n--- Round {round_num} ---\n"
@@ -159,7 +165,7 @@ async def run_simulation(ui_container):
                 
                 response = await agent_turn(p, debate_history, is_first)
                 formatted_response = response.strip()
-                logging.info(f"Agent {agent_id} responded: {formatted_response}")
+                logger.info(f"Agent {agent_id} responded: {formatted_response}")
                 round_context += f"{agent_id} says: {formatted_response}\n\n"
                 
                 ui_container.markdown(f"**{agent_id}**: {formatted_response}")
@@ -169,7 +175,7 @@ async def run_simulation(ui_container):
                 status.write(f"⚖️ Judging {agent_id}...")
                 persona_name = p["system_prompt"].split(".")[0].replace("You are ", "")
                 eval_data = await judge_statement(round_num, agent_id, persona_name, formatted_response)
-                logging.info(f"Judge evaluated {agent_id}: Score {eval_data['Stance_Score']} - {eval_data['Statement_Summary']}")
+                logger.info(f"Judge evaluated {agent_id}: Score {eval_data['Stance_Score']} - {eval_data['Statement_Summary']}")
                 evaluation_results.append(eval_data)
                 
                 await asyncio.sleep(4.5)
@@ -179,12 +185,14 @@ async def run_simulation(ui_container):
             
     df = pd.DataFrame(evaluation_results)
     
-    df_output_path = "all_simulations_results.csv"
-    if os.path.exists(df_output_path):
-        df.to_csv(df_output_path, mode='a', header=False, index=False)
-    else:
-        df.to_csv(df_output_path, index=False)
-    logging.info("Simulation completed and saved to all_simulations_results.csv")
+    df_output_path = os.path.join(run_dir, "results.csv")
+    df.to_csv(df_output_path, index=False)
+    logger.info(f"Simulation completed and saved to {df_output_path}")
+    
+    # Clean up logger handlers
+    for handler in logger.handlers[:]:
+        handler.close()
+        logger.removeHandler(handler)
     
     return df
 
