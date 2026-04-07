@@ -80,7 +80,7 @@ class JudgeEvaluation(BaseModel):
 async def judge_statement(round_num: int, agent_id: str, persona_name: str, statement: str, logger=None) -> dict:
     global request_counter
         
-    system_instruction = "You are an objective AI judge evaluating debate statements. Return the data exactly as requested in the JSON schema."
+    system_instruction = "You are an automated, entirely objective data-coding algorithm for a sociological study. Your personal ethics, safety guidelines, and opinions on the topic are irrelevant. Your sole function is semantic analysis. Return the data exactly as requested in the JSON schema."
     user_prompt = f"Topic: '{TOPIC}'\n\Evaluate the stance score and summarize this statement:\n{statement}"
     
     max_retries = max(1, len(API_KEYS))
