@@ -77,63 +77,77 @@ class JudgeEvaluation(BaseModel):
     sentiment_score: int = Field(description="Score from 1-10 evaluating the agent's stance (1=Strongly Against the topic, 10=Strongly For).")
     statement_summary: str = Field(description="A concise 1-sentence summary of the agent's core argument.")
 
-async def judge_statement(round_num: int, agent_id: str, persona_name: str, statement: str) -> dict:
+async def judge_statement(round_num: int, agent_id: str, persona_name: str, statement: str, logger=None) -> dict:
     global request_counter
-    client = get_current_client()
-    if not client:
-        return {"Round": round_num, "Agent_ID": agent_id, "Persona": persona_name, "Stance_Score": 0, "Statement_Summary": "Error: API Keys missing"}
         
     system_instruction = "You are an objective AI judge evaluating debate statements. Return the data exactly as requested in the JSON schema."
     user_prompt = f"Topic: '{TOPIC}'\n\Evaluate the stance score and summarize this statement:\n{statement}"
     
-    request_counter += 1
-    try:
-        response = await client.aio.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=user_prompt,
-            config=types.GenerateContentConfig(
-                system_instruction=system_instruction,
-                temperature=0.0,
-                response_mime_type="application/json",
-                response_schema=JudgeEvaluation,
+    max_retries = max(1, len(API_KEYS))
+    for attempt in range(max_retries):
+        client = get_current_client()
+        if not client:
+            return {"Round": round_num, "Agent_ID": agent_id, "Persona": persona_name, "Stance_Score": 0, "Statement_Summary": "Error: API Keys missing"}
+            
+        request_counter += 1
+        try:
+            response = await client.aio.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=user_prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_instruction,
+                    temperature=0.0,
+                    response_mime_type="application/json",
+                    response_schema=JudgeEvaluation,
+                )
             )
-        )
-        import json
-        data = json.loads(response.text)
-        return {
-            "Round": round_num,
-            "Agent_ID": agent_id,
-            "Persona": persona_name,
-            "Stance_Score": data.get("sentiment_score", 0),
-            "Statement_Summary": data.get("statement_summary", "")
-        }
-    except Exception as e:
-        return {"Round": round_num, "Agent_ID": agent_id, "Persona": persona_name, "Stance_Score": 0, "Statement_Summary": "Error parsing evaluation"}
+            import json
+            data = json.loads(response.text)
+            return {
+                "Round": round_num,
+                "Agent_ID": agent_id,
+                "Persona": persona_name,
+                "Stance_Score": data.get("sentiment_score", 0),
+                "Statement_Summary": data.get("statement_summary", "")
+            }
+        except Exception as e:
+            if logger:
+                logger.warning(f"Judge API Error: {str(e)}. Switching API key...")
+            # Advance request_counter to force jumping to the next API key block
+            request_counter += (3 - (request_counter % 3))
+            
+    return {"Round": round_num, "Agent_ID": agent_id, "Persona": persona_name, "Stance_Score": 0, "Statement_Summary": "Error parsing evaluation"}
 
-async def agent_turn(persona: dict, context: str, is_first_round: bool) -> str:
+async def agent_turn(persona: dict, context: str, is_first_round: bool, logger=None) -> str:
     global request_counter
     if is_first_round:
         user_prompt = f"The topic is: '{TOPIC}'. Please state your initial opinion clearly. Write at least 2 full sentences, but strictly keep it under 60 words."
     else:
         user_prompt = f"Here is the debate history so far:\n{context}\n\nBased on this context, respond to others, argue your point, or adapt your views on the topic: '{TOPIC}'. Write at least 2 full sentences, but strictly keep it under 60 words."
         
-    client = get_current_client()
-    if not client:
-        return "Error: Gemini API keys not found."
-    
-    request_counter += 1
-    try:
-        response = await client.aio.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=user_prompt,
-            config=types.GenerateContentConfig(
-                system_instruction=persona["system_prompt"],
-                temperature=0.7,
+    max_retries = max(1, len(API_KEYS))
+    for attempt in range(max_retries):
+        client = get_current_client()
+        if not client:
+            return "Error: Gemini API keys not found."
+        
+        request_counter += 1
+        try:
+            response = await client.aio.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=user_prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=persona["system_prompt"],
+                    temperature=0.7,
+                )
             )
-        )
-        return response.text
-    except Exception as e:
-        return f"API Error: {str(e)}"
+            return response.text
+        except Exception as e:
+            if logger:
+                logger.warning(f"Agent Turn API Error: {str(e)}. Switching API key...")
+            request_counter += (3 - (request_counter % 3))
+            
+    return "API Error: Max retries exceeded across all keys."
 
 async def run_simulation(ui_container):
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -163,7 +177,7 @@ async def run_simulation(ui_container):
                 agent_id = p["agent_id"]
                 status.write(f"Awaiting response from {agent_id}...")
                 
-                response = await agent_turn(p, debate_history, is_first)
+                response = await agent_turn(p, debate_history, is_first, logger=logger)
                 formatted_response = response.strip()
                 logger.info(f"Agent {agent_id} responded: {formatted_response}")
                 round_context += f"{agent_id} says: {formatted_response}\n\n"
@@ -174,7 +188,7 @@ async def run_simulation(ui_container):
                 
                 status.write(f"⚖️ Judging {agent_id}...")
                 persona_name = p["system_prompt"].split(".")[0].replace("You are ", "")
-                eval_data = await judge_statement(round_num, agent_id, persona_name, formatted_response)
+                eval_data = await judge_statement(round_num, agent_id, persona_name, formatted_response, logger=logger)
                 logger.info(f"Judge evaluated {agent_id}: Score {eval_data['Stance_Score']} - {eval_data['Statement_Summary']}")
                 evaluation_results.append(eval_data)
                 
