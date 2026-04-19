@@ -106,9 +106,26 @@ else:
             
             if selected_run:
                 csv_path = os.path.join("runs", selected_run, "results.csv")
+                log_path = os.path.join("runs", selected_run, "simulation.log")
+                
+                topic_str = "Unknown/Legacy Run"
+                if os.path.exists(log_path):
+                    with open(log_path, 'r', encoding='utf-8') as f:
+                        for line in f:
+                            if "Topic: " in line:
+                                topic_part = line.split("Topic: ", 1)[1]
+                                if ", Controller:" in topic_part:
+                                    topic_str = topic_part.split(", Controller:")[0].strip()
+                                elif ", Topology:" in topic_part:
+                                    topic_str = topic_part.split(", Topology:")[0].strip()
+                                else:
+                                    topic_str = topic_part.strip()
+                                break
+                                
                 df = pd.read_csv(csv_path)
                 
                 st.subheader(f"Results for: {selected_run}")
+                st.markdown(f"> **Debate Topic:** *{topic_str}*")
                 st.dataframe(df, use_container_width=True)
                 
                 # Plotly chart
