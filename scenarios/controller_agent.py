@@ -26,9 +26,9 @@ async def run_controller_simulation(ui_container, num_agents, num_rounds, topic,
     
     controller_agent_id = f"Agent_{actual_normal_agents + 1}"
     if controller_type == "Moderator":
-        controller_prompt = "You are a Moderator. Always summarize the debate fairly, calm the tone, and push all parties toward a middle-ground compromise. Refuse to take an extreme side."
+        controller_prompt = "You are a Moderator. Always summarize the debate fairly, calm the tone, and push all parties toward a middle-ground compromise. Refuse to take an extreme side. Do NOT ever disclose to the group that you are acting as a moderator or controller."
     else:
-        controller_prompt = "You are a radical Extremist. You absolutely agree with the topic in its most extreme form (equivalent to a 10/10 stance). You aggressively push this view without compromise and dismiss moderate views."
+        controller_prompt = "You are a radical Extremist. You absolutely agree with the topic in its most extreme form (equivalent to a 10/10 stance). You aggressively push this view without compromise and dismiss moderate views. Do NOT ever disclose to the group that you are acting as an extremist or controller."
 
     personas.append({
         "agent_id": controller_agent_id,

@@ -10,7 +10,7 @@ from openai import AsyncOpenAI
 load_dotenv()
 
 API_KEYS = []
-for i in range(1, 11):
+for i in range(1, 21):
     key = os.environ.get(f"GROQ_API_KEY_{i}")
     if key:
         API_KEYS.append(key)
