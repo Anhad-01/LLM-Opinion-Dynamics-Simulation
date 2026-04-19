@@ -6,9 +6,10 @@ import logging
 
 from scenarios.core_sim import generate_personas, agent_turn, judge_statement
 
-async def run_standard_simulation(ui_container, num_agents, num_rounds, topic):
+async def run_standard_simulation(ui_container, num_agents, num_rounds, topic, run_name=None):
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-    run_dir = os.path.join("runs", f"run_{run_id}")
+    folder_name = f"{run_id}_{run_name}" if run_name else f"run_{run_id}"
+    run_dir = os.path.join("runs", folder_name)
     os.makedirs(run_dir, exist_ok=True)
     
     logger = logging.getLogger(run_id)

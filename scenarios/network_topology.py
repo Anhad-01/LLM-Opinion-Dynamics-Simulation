@@ -21,9 +21,10 @@ def get_allowed_neighbors(target_index, topology_type, total_agents):
         else: # Group B
             return list(range(mid + 1, total_agents))
 
-async def run_topology_simulation(ui_container, num_agents, num_rounds, topic, topology_type):
+async def run_topology_simulation(ui_container, num_agents, num_rounds, topic, topology_type, run_name=None):
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-    run_dir = os.path.join("runs", f"run_{run_id}")
+    folder_name = f"{run_id}_{run_name}" if run_name else f"run_{run_id}"
+    run_dir = os.path.join("runs", folder_name)
     os.makedirs(run_dir, exist_ok=True)
     
     logger = logging.getLogger(run_id)
