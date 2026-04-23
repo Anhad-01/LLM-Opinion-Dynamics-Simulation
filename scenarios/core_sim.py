@@ -42,15 +42,29 @@ BASE_PERSONAS = [
     "A youth climate striker who feels their future is being stolen",
     "A renewable energy investor hoping to capitalize on green policies",
     "A pessimistic philosopher who thinks humanity is doomed regardless of policy",
-    "An international diplomat concerned about fairness between developed and developing nations"
+    "An international diplomat concerned about fairness between developed and developing nations",
+    "A citizen of a rapidly developing nation who resents paying a global tax for a climate crisis historically caused by wealthy Western countries",
+    "A union representative who supports climate action but fears blue-collar job losses",
+    "A visionary futurist who views a carbon tax as necessary to prevent long-term collapse"
 ]
 
 def generate_personas(num_agents: int) -> list[dict]:
     personas = []
-    if num_agents > len(BASE_PERSONAS):
-        selected = random.choices(BASE_PERSONAS, k=num_agents)
-    else:
-        selected = random.sample(BASE_PERSONAS, k=num_agents)
+    selected = []
+    
+    # Fill with complete unique sequences first
+    while len(selected) + len(BASE_PERSONAS) <= num_agents:
+        shuffled = list(BASE_PERSONAS)
+        random.shuffle(shuffled)
+        selected.extend(shuffled)
+        
+    # Fill any remaining slots randomly without duplicate overlap at the rim
+    remaining = num_agents - len(selected)
+    if remaining > 0:
+        selected.extend(random.sample(BASE_PERSONAS, k=remaining))
+        
+    # Final global shuffle to ensure duplicated profiles are scattered
+    random.shuffle(selected)
         
     for i, archetype in enumerate(selected):
         stance_score = random.randint(1, 10)

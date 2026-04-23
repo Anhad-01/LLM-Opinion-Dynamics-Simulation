@@ -70,8 +70,10 @@ BASE_PERSONAS = [
     "A youth climate striker who feels their future is being stolen",
     "A renewable energy investor hoping to capitalize on green policies",
     "A pessimistic philosopher who thinks humanity is doomed regardless of policy",
-    "An international diplomat concerned about fairness between developed and developing nations"
+    "An international diplomat concerned about fairness between developed and developing nations",
     "A citizen of a rapidly developing nation who resents paying a global tax for a climate crisis historically caused by wealthy Western countries",
+    "A union representative who supports climate action but fears blue-collar job losses",
+    "A visionary futurist who views a carbon tax as necessary to prevent long-term collapse"
 ]
 
 def generate_personas(num_agents: int) -> list[dict]:
